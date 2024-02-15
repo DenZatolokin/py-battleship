@@ -1,6 +1,6 @@
 class Deck:
     visible_symbol = u"\u25A1  "
-    destroyed_symbol = "x  "
+    destroyed_symbol = "*  "
 
     def __init__(
             self,
@@ -39,14 +39,14 @@ class Ship:
             return [(x, y1) for x in range(
                 min(x1, x2), max(x1, x2) + 1)]
 
-    def fire(self, row: int, column: int) -> bool:
+    def fire(self, row: int, column: int) -> None:
         for deck in self.decks:
             if deck.row == row and deck.column == column:
                 deck.is_alive = False
                 if all(not deck.is_alive for deck in self.decks):
                     self.is_drowned = True
-                return True
-        return False
+                    for deck in self.decks:
+                        deck.destroyed_symbol = "x  "
 
 
 class Battleship:
@@ -55,6 +55,19 @@ class Battleship:
         self.ships = [Ship(start, end) for start, end in ships]
         self.field = [["~" for _ in range(10)] for _ in range(10)]
         self.ships_on_the_field()
+        self._validate_field()
+
+    def _validate_field(self) -> None:
+        ship_count = {1: 0, 2: 0, 3: 0, 4: 0}
+
+        for ship in self.ships:
+            ship_length = len(ship.decks)
+            if ship_length > 4 or ship_length < 1:
+                raise ValueError("Ship length must be between 1 and 4")
+            ship_count[ship_length] += 1
+
+        if ship_count != {1: 4, 2: 3, 3: 2, 4: 1}:
+            raise ValueError("Wrong number of ships")
 
     def __str__(self) -> str:
         result = ""
@@ -88,3 +101,19 @@ class Battleship:
             return "Miss!"
         except IndexError:
             return "Invalid coordinates!"
+battle_ship = Battleship(
+        ships=[
+            ((2, 0), (2, 3)),
+            ((4, 5), (4, 6)),
+            ((3, 8), (3, 9)),
+            ((6, 0), (8, 0)),
+            ((6, 4), (6, 6)),
+            ((6, 8), (6, 9)),
+            ((9, 9), (9, 9)),
+            ((9, 5), (9, 5)),
+            ((9, 3), (9, 3)),
+            ((9, 7), (9, 7)),
+        ]
+    )
+battle_ship.fire((0, 4))
+print(battle_ship)
